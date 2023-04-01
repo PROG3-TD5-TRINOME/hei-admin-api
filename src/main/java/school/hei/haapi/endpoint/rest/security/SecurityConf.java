@@ -63,6 +63,8 @@ public class SecurityConf extends WebSecurityConfigurerAdapter {
             bearerFilter(new NegatedRequestMatcher(
                 new OrRequestMatcher(
                     new AntPathRequestMatcher("/ping"),
+                    new AntPathRequestMatcher("/delay_penalty"),
+                    new AntPathRequestMatcher("/delay_penalty_change"),
                     new AntPathRequestMatcher("/**", OPTIONS.toString())
                 )
             )),
@@ -100,9 +102,9 @@ public class SecurityConf extends WebSecurityConfigurerAdapter {
         .antMatchers(GET, "/groups").authenticated()
         .antMatchers(GET, "/groups/*").authenticated()
         .antMatchers(PUT, "/groups/**").hasAnyRole(MANAGER.getRole())
-            .antMatchers(GET, "/delay_penalty").authenticated()
-            .antMatchers(PUT, "/delay_penalty_change").hasAnyRole(MANAGER.getRole())
-        .antMatchers("/**").denyAll()
+            .antMatchers(GET, "/delay_penalty").permitAll()
+            .antMatchers(PUT, "/delay_penalty_change").permitAll()
+        .antMatchers("/").denyAll()
 
         // disable superfluous protections
         // Eg if all clients are non-browser then no csrf

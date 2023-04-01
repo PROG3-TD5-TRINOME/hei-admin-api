@@ -72,6 +72,8 @@ public class FeeService {
     return feeRepository.getByStudentId(studentId, pageable);
   }
 
+
+
   private Fee updateFeeStatus(Fee initialFee) {
     if (initialFee.getRemainingAmount() == 0) {
       initialFee.setStatus(PAID);
