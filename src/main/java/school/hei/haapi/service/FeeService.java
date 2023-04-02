@@ -1,6 +1,8 @@
 package school.hei.haapi.service;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import javax.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -67,35 +69,28 @@ public class FeeService {
         page.getValue() - 1,
         pageSize.getValue(),
         Sort.by(DESC, "dueDatetime"));
+    int gracePeriod = delayPenaltyService.getDelayPenalty().getGraceDelay();
+    double interestPercent = delayPenaltyService.getDelayPenalty().getInterestPercent();
+    int applicabilityDelaysAfterGrace = delayPenaltyService.getDelayPenalty().getApplicabilityDelayAfterGrace();
+
+
     if (status != null) {
-      return feeRepository.getFeesByStudentIdAndStatus(studentId, status, pageable);
+      List<school.hei.haapi.model.Fee> fees = feeRepository.getFeesByStudentIdAndStatus(studentId, status, pageable);
+      for (school.hei.haapi.model.Fee fee : fees) {
+        if (fee.getRemainingAmount() > 0 && fee.getStatus() == school.hei.haapi.endpoint.rest.model.Fee.StatusEnum.LATE) {
+          LocalDate currentDate = LocalDate.now();
+          LocalDate applicableInterest = LocalDate.of(currentDate.getYear(),currentDate.getMonth(),(15+gracePeriod));
+          LocalDate applicabilityDelayAfterGrace = LocalDate.of(applicableInterest.getYear(),applicableInterest.getMonth(),(applicableInterest.getDayOfMonth() + applicabilityDelaysAfterGrace));
+          long daysBetween = ChronoUnit.DAYS.between(applicableInterest,applicabilityDelayAfterGrace);
+          if(daysBetween>0){
+            double lateFee = fee.getRemainingAmount() * interestPercent;
+            fee.setRemainingAmount((int) (fee.getTotalAmount()+ lateFee));
+          }
+        }
+      }
+      return fees;
     }
     return feeRepository.getByStudentId(studentId, pageable);
-  }
-  public class ConfigurationService {
-    private int gracePeriod;
-    private double lateFeeRate;
-
-    public ConfigurationService() {
-      this.gracePeriod = delayPenaltyService.getDelayPenalty().getGraceDelay();
-      this.lateFeeRate = 0.05;
-    }
-
-    public int getGracePeriod() {
-      return gracePeriod;
-    }
-
-    public void setGracePeriod(int gracePeriod) {
-      this.gracePeriod = gracePeriod;
-    }
-
-    public double getLateFeeRate() {
-      return lateFeeRate;
-    }
-
-    public void setLateFeeRate(double lateFeeRate) {
-      this.lateFeeRate = lateFeeRate;
-    }
   }
 
   private Fee updateFeeStatus(Fee initialFee) {
