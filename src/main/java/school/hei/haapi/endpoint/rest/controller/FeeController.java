@@ -18,6 +18,7 @@ import school.hei.haapi.endpoint.rest.mapper.FeeMapper;
 import school.hei.haapi.endpoint.rest.model.CreateFee;
 import school.hei.haapi.endpoint.rest.model.Fee;
 import school.hei.haapi.model.BoundedPageSize;
+import school.hei.haapi.model.DelayPenalty;
 import school.hei.haapi.model.PageFromOne;
 import school.hei.haapi.service.FeeService;
 

@@ -33,6 +33,7 @@ public class FeeService {
   private final FeeValidator feeValidator;
 
   private final EventProducer eventProducer;
+  private final DelayPenaltyService delayPenaltyService;
 
   public Fee getById(String id) {
     return updateFeeStatus(feeRepository.getById(id));
@@ -76,7 +77,7 @@ public class FeeService {
     private double lateFeeRate;
 
     public ConfigurationService() {
-      this.gracePeriod = 10;
+      this.gracePeriod = delayPenaltyService.getDelayPenalty().getGraceDelay();
       this.lateFeeRate = 0.05;
     }
 
