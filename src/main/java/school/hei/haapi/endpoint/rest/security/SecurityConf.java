@@ -63,8 +63,6 @@ public class SecurityConf extends WebSecurityConfigurerAdapter {
             bearerFilter(new NegatedRequestMatcher(
                 new OrRequestMatcher(
                     new AntPathRequestMatcher("/ping"),
-                    new AntPathRequestMatcher("/delay_penalty"),
-                    new AntPathRequestMatcher("/delay_penalty_change"),
                     new AntPathRequestMatcher("/**", OPTIONS.toString())
                 )
             )),
