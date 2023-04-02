@@ -72,6 +72,32 @@ public class FeeService {
     return feeRepository.getByStudentId(studentId, pageable);
   }
 
+  public class ConfigurationService {
+    private int gracePeriod;
+    private double lateFeeRate;
+
+    public ConfigurationService() {
+      this.gracePeriod = 10;
+      this.lateFeeRate = 0.05;
+    }
+
+    public int getGracePeriod() {
+      return gracePeriod;
+    }
+
+    public void setGracePeriod(int gracePeriod) {
+      this.gracePeriod = gracePeriod;
+    }
+
+    public double getLateFeeRate() {
+      return lateFeeRate;
+    }
+
+    public void setLateFeeRate(double lateFeeRate) {
+      this.lateFeeRate = lateFeeRate;
+    }
+  }
+
   private Fee updateFeeStatus(Fee initialFee) {
     if (initialFee.getRemainingAmount() == 0) {
       initialFee.setStatus(PAID);
