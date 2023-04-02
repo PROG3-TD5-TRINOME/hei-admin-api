@@ -31,7 +31,6 @@ public class FeeController {
   private final FeeService feeService;
   private final FeeMapper feeMapper;
 
-  private final FeeService.ConfigurationService configurationService;
 
   @GetMapping("/students/{studentId}/fees/{feeId}")
   public Fee getFeeByStudentId(
@@ -56,23 +55,6 @@ public class FeeController {
           @RequestParam("page_size") BoundedPageSize pageSize,
           @RequestParam(required = false) Fee.StatusEnum status) {
     List<school.hei.haapi.model.Fee> fees = feeService.getFeesByStudentId(studentId, page, pageSize, status);
-
-    for (school.hei.haapi.model.Fee fee : fees) {
-      if (fee.getRemainingAmount() > 0 && fee.getStatus() == Fee.StatusEnum.LATE) {
-        LocalDate dueDate = LocalDate.parse(fee.getDueDatetime().toString());
-        LocalDate currentDate = LocalDate.now();
-        int gracePeriod = configurationService.getGracePeriod();
-        double lateFeeRate = configurationService.getLateFeeRate();
-        LocalDate gracePeriodEndDate = dueDate.plusDays(gracePeriod);
-        LocalDate lateFeeStartDate = gracePeriodEndDate.plusDays(1);
-        LocalDate lateFeeEndDate = lateFeeStartDate.plusDays(5); // assume 5 days late fee period
-
-        if (currentDate.isAfter(lateFeeStartDate) && currentDate.isBefore(lateFeeEndDate)) {
-          double lateFee = fee.getRemainingAmount() * lateFeeRate;
-          fee.setTotalAmount((int) (fee.getTotalAmount() + lateFee));
-        }
-      }
-    }
 
     return fees.stream()
             .map(feeMapper::toRestFee)
