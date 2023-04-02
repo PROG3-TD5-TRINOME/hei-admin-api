@@ -102,8 +102,8 @@ public class SecurityConf extends WebSecurityConfigurerAdapter {
         .antMatchers(GET, "/groups").authenticated()
         .antMatchers(GET, "/groups/*").authenticated()
         .antMatchers(PUT, "/groups/**").hasAnyRole(MANAGER.getRole())
-            .antMatchers(GET, "/delay_penalty").permitAll()
-            .antMatchers(PUT, "/delay_penalty_change").permitAll()
+            .antMatchers(GET, "/delay_penalty").authenticated()
+            .antMatchers(PUT, "/delay_penalty_change").hasAnyRole(MANAGER.getRole())
         .antMatchers("/").denyAll()
 
         // disable superfluous protections
