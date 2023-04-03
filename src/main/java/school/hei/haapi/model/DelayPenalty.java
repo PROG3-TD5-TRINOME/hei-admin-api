@@ -27,7 +27,9 @@ public class DelayPenalty implements Serializable {
     private String id;
 
     private double interestPercent;
-
+    @ManyToOne
+    @JoinColumn(name = "student_id")
+    private User student;
     @Type(type = "pgsql_enum")
     @Enumerated(EnumType.STRING)
     private school.hei.haapi.endpoint.rest.model.DelayPenalty.InterestTimerateEnum interestTimerate;
