@@ -52,5 +52,4 @@ public class LateFeeService implements Consumer<LateFeeVerified> {
     String htmlBody = htmlToString("lateFeeEmail", getMailContext(lateFee));
     sesService.sendEmail(sender, recipient, subject, htmlBody);
   }
-
 }

@@ -77,7 +77,7 @@ public class FeeService {
       initialFee.setStatus(PAID);
     } else if (Instant.now().isAfter(initialFee.getDueDatetime())) {
       initialFee.setStatus(LATE);
-    }
+     }
     return initialFee;
   }
 
