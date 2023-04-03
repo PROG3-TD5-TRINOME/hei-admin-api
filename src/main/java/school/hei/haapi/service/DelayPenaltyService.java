@@ -25,14 +25,4 @@ public class DelayPenaltyService {
     public DelayPenalty createDelayPenaltyChange(CreateDelayPenaltyChange createDelayPenaltyChange) {
         return delayPenaltyMapper.toDomain(createDelayPenaltyChange);
     }
-
-    public List<Fee> applyDelayPenalty(List<Fee> fees) {
-        return fees.stream()
-                .map(fee -> {
-                    int remainingAmount = (int) (fee.getRemainingAmount() * (1 + getDelayPenalty().getInterestPercent() / 100));
-                    fee.setRemainingAmount(remainingAmount);
-                    return fee;
-                })
-                .collect(Collectors.toUnmodifiableList());
-    }
 }
