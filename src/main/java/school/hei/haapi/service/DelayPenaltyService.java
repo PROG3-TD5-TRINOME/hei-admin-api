@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class DelayPenaltyService {
     private final DelayPenaltyRepository repository;
-    private final DelayPenaltyMapper delayPenaltyMapper;
     public List<DelayPenalty> getDelayPenalty() {
         return repository.findAll();
     }

@@ -60,6 +60,7 @@ class DelayPenaltyIT {
   }
 
 
+
   @BeforeEach
   void setUp() {
     setUpCognito(cognitoComponentMock);
@@ -116,8 +117,8 @@ class DelayPenaltyIT {
     PayingApi api = new PayingApi(manager1Client);
 
     List<Fee> actual = api.getStudentFees("student2_id", 1, 20, school.hei.haapi.endpoint.rest.model.Fee.StatusEnum.LATE.getValue());
-
-    assertEquals(true, true);
+    List<Fee> expected = List.of(FeeIT.fee3());
+    assertEquals(expected, true);
   }
 
   @Test

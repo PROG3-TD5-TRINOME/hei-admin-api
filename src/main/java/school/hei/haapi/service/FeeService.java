@@ -1,6 +1,10 @@
 package school.hei.haapi.service;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import javax.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -33,6 +37,7 @@ public class FeeService {
   private final FeeValidator feeValidator;
 
   private final EventProducer eventProducer;
+  private final DelayPenaltyService delayPenaltyService;
 
   public Fee getById(String id) {
     return updateFeeStatus(feeRepository.getById(id));
@@ -66,8 +71,28 @@ public class FeeService {
         page.getValue() - 1,
         pageSize.getValue(),
         Sort.by(DESC, "dueDatetime"));
+    int gracePeriod = delayPenaltyService.getDelayPenalty().get(0).getGraceDelay();
+    double interestPercent = delayPenaltyService.getDelayPenalty().get(0).getInterestPercent();
+    int applicabilityDelaysAfterGrace = delayPenaltyService.getDelayPenalty().get(0).getApplicabilityDelayAfterGrace();
+
+
     if (status != null) {
-      return feeRepository.getFeesByStudentIdAndStatus(studentId, status, pageable);
+      List<school.hei.haapi.model.Fee> fees = feeRepository.getFeesByStudentIdAndStatus(studentId, status, pageable);
+      for (school.hei.haapi.model.Fee fee : fees) {
+        if (fee.getRemainingAmount() > 0 && fee.getStatus() == school.hei.haapi.endpoint.rest.model.Fee.StatusEnum.LATE) {
+          LocalDate currentDate = LocalDate.now();
+          ZonedDateTime zonedDateTime = fee.getDueDatetime().atZone(ZoneId.systemDefault());
+          int dayOfMonth = zonedDateTime.getDayOfMonth();
+          LocalDate applicableInterest = LocalDate.of(currentDate.getYear(),currentDate.getMonth(),(dayOfMonth+gracePeriod));
+          LocalDate applicabilityDelayAfterGrace = LocalDate.of(applicableInterest.getYear(),applicableInterest.getMonth(),(applicableInterest.getDayOfMonth() + applicabilityDelaysAfterGrace));
+          long daysBetween = ChronoUnit.DAYS.between(applicableInterest,applicabilityDelayAfterGrace);
+          if(daysBetween>0){
+            double lateFee = fee.getRemainingAmount() * interestPercent;
+            fee.setRemainingAmount((int) (fee.getTotalAmount()+ lateFee));
+          }
+        }
+      }
+      return fees;
     }
     return feeRepository.getByStudentId(studentId, pageable);
   }

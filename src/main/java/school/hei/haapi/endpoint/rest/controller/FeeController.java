@@ -1,7 +1,13 @@
 package school.hei.haapi.endpoint.rest.controller;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +18,7 @@ import school.hei.haapi.endpoint.rest.mapper.FeeMapper;
 import school.hei.haapi.endpoint.rest.model.CreateFee;
 import school.hei.haapi.endpoint.rest.model.Fee;
 import school.hei.haapi.model.BoundedPageSize;
+import school.hei.haapi.model.DelayPenalty;
 import school.hei.haapi.model.PageFromOne;
 import school.hei.haapi.service.FeeService;
 
@@ -23,6 +30,7 @@ public class FeeController {
 
   private final FeeService feeService;
   private final FeeMapper feeMapper;
+
 
   @GetMapping("/students/{studentId}/fees/{feeId}")
   public Fee getFeeByStudentId(
@@ -42,14 +50,17 @@ public class FeeController {
 
   @GetMapping("/students/{studentId}/fees")
   public List<Fee> getFeesByStudentId(
-      @PathVariable String studentId,
-      @RequestParam PageFromOne page,
-      @RequestParam("page_size") BoundedPageSize pageSize,
-      @RequestParam(required = false) Fee.StatusEnum status) {
-    return feeService.getFeesByStudentId(studentId, page, pageSize, status).stream()
-        .map(feeMapper::toRestFee)
-        .collect(toUnmodifiableList());
+          @PathVariable String studentId,
+          @RequestParam PageFromOne page,
+          @RequestParam("page_size") BoundedPageSize pageSize,
+          @RequestParam(required = false) Fee.StatusEnum status) {
+    List<school.hei.haapi.model.Fee> fees = feeService.getFeesByStudentId(studentId, page, pageSize, status);
+
+    return fees.stream()
+            .map(feeMapper::toRestFee)
+            .collect(toUnmodifiableList());
   }
+
 
   @GetMapping("/fees")
   public List<Fee> getFees(
