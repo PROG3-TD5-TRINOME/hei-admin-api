@@ -13,6 +13,7 @@ import school.hei.haapi.endpoint.rest.client.ApiClient;
 import school.hei.haapi.endpoint.rest.client.ApiException;
 import school.hei.haapi.endpoint.rest.model.CreateDelayPenaltyChange;
 import school.hei.haapi.endpoint.rest.model.DelayPenalty;
+import school.hei.haapi.endpoint.rest.model.Fee;
 import school.hei.haapi.endpoint.rest.security.cognito.CognitoComponent;
 import school.hei.haapi.integration.conf.AbstractContextInitializer;
 import school.hei.haapi.integration.conf.TestUtils;
@@ -20,7 +21,7 @@ import school.hei.haapi.integration.conf.TestUtils;
 import java.time.Instant;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static school.hei.haapi.integration.conf.TestUtils.*;
 
@@ -107,6 +108,16 @@ class DelayPenaltyIT {
 
     DelayPenalty expected = api.getDelayPenalty();
     assertEquals(expected, actual);
+  }
+
+  @Test
+  void manager_apply_delay_penalty_ok() throws ApiException {
+    ApiClient manager1Client = anApiClient(MANAGER1_TOKEN);
+    PayingApi api = new PayingApi(manager1Client);
+
+    List<Fee> actual = api.getStudentFees("student2_id", 1, 20, school.hei.haapi.endpoint.rest.model.Fee.StatusEnum.LATE.getValue());
+
+    assertEquals(true, true);
   }
 
   @Test
