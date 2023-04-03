@@ -18,21 +18,12 @@ import java.util.stream.Collectors;
 public class DelayPenaltyService {
     private final DelayPenaltyRepository repository;
     private final DelayPenaltyMapper delayPenaltyMapper;
-    public DelayPenalty getDelayPenalty() {
-        return repository.findAll().get(0);
+    public List<DelayPenalty> getDelayPenalty() {
+        return repository.findAll();
     }
 
-    public DelayPenalty createDelayPenaltyChange(CreateDelayPenaltyChange createDelayPenaltyChange) {
-        return delayPenaltyMapper.toDomain(createDelayPenaltyChange);
-    }
-
-    public List<Fee> applyDelayPenalty(List<Fee> fees) {
-        return fees.stream()
-                .map(fee -> {
-                    int remainingAmount = (int) (fee.getRemainingAmount() * (1 + getDelayPenalty().getInterestPercent() / 100));
-                    fee.setRemainingAmount(remainingAmount);
-                    return fee;
-                })
+    public List<DelayPenalty> createDelayPenaltyChange(List<DelayPenalty> delayPenalties) {
+        return repository.saveAll(delayPenalties).stream()
                 .collect(Collectors.toUnmodifiableList());
     }
 }

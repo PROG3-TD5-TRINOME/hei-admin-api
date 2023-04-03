@@ -12,10 +12,10 @@ public class CreateDelayPenaltyValidator implements Consumer<CreateDelayPenaltyC
     if (createDelayPenaltyChange.getInterestPercent() != null && createDelayPenaltyChange.getInterestPercent() < 0) {
       throw new BadRequestException("InterestPercent can't be below 0");
     }
-    if (createDelayPenaltyChange.getGraceDelay() != null && createDelayPenaltyChange.getGraceDelay() < 0) {
+    else if (createDelayPenaltyChange.getGraceDelay() != null && createDelayPenaltyChange.getGraceDelay() < 0) {
       throw new BadRequestException("GraceDelay can't be below 0");
     }
-    if (createDelayPenaltyChange.getApplicabilityDelayAfterGrace() != null && createDelayPenaltyChange.getApplicabilityDelayAfterGrace() < 0) {
+    else if (createDelayPenaltyChange.getApplicabilityDelayAfterGrace() != null && createDelayPenaltyChange.getApplicabilityDelayAfterGrace() < 0) {
       throw new BadRequestException("ApplicabilityDelayAfterGrace can't be null or below 0");
     }
   }

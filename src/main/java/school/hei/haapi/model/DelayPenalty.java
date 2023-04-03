@@ -35,7 +35,11 @@ public class DelayPenalty implements Serializable {
     private int graceDelay;
 
     private int applicabilityDelayAfterGrace;
+
+    @ManyToOne
+    @JoinColumn(name = "student_id")
+    private User student;
+
     @CreationTimestamp
-    @Getter(AccessLevel.NONE)
     private Instant creationDatetime;
 }

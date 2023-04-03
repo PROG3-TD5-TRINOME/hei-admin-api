@@ -1,0 +1,1 @@
+alter table "delay_penalty" add column student_id varchar;
