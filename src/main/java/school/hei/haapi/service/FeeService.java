@@ -2,6 +2,8 @@ package school.hei.haapi.service;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import javax.transaction.Transactional;
@@ -79,7 +81,9 @@ public class FeeService {
       for (school.hei.haapi.model.Fee fee : fees) {
         if (fee.getRemainingAmount() > 0 && fee.getStatus() == school.hei.haapi.endpoint.rest.model.Fee.StatusEnum.LATE) {
           LocalDate currentDate = LocalDate.now();
-          LocalDate applicableInterest = LocalDate.of(currentDate.getYear(),currentDate.getMonth(),(15+gracePeriod));
+          ZonedDateTime zonedDateTime = fee.getDueDatetime().atZone(ZoneId.systemDefault());
+          int dayOfMonth = zonedDateTime.getDayOfMonth();
+          LocalDate applicableInterest = LocalDate.of(currentDate.getYear(),currentDate.getMonth(),(dayOfMonth+gracePeriod));
           LocalDate applicabilityDelayAfterGrace = LocalDate.of(applicableInterest.getYear(),applicableInterest.getMonth(),(applicableInterest.getDayOfMonth() + applicabilityDelaysAfterGrace));
           long daysBetween = ChronoUnit.DAYS.between(applicableInterest,applicabilityDelayAfterGrace);
           if(daysBetween>0){
