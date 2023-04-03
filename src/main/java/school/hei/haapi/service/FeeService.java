@@ -1,6 +1,8 @@
 package school.hei.haapi.service;
 
 import java.time.Instant;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import javax.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -14,9 +16,11 @@ import school.hei.haapi.endpoint.event.EventProducer;
 import school.hei.haapi.endpoint.event.model.TypedLateFeeVerified;
 import school.hei.haapi.endpoint.event.model.gen.LateFeeVerified;
 import school.hei.haapi.model.BoundedPageSize;
+import school.hei.haapi.model.DelayPenalty;
 import school.hei.haapi.model.Fee;
 import school.hei.haapi.model.PageFromOne;
 import school.hei.haapi.model.validator.FeeValidator;
+import school.hei.haapi.repository.DelayPenaltyRepository;
 import school.hei.haapi.repository.FeeRepository;
 
 import static org.springframework.data.domain.Sort.Direction.DESC;
@@ -33,6 +37,8 @@ public class FeeService {
   private final FeeValidator feeValidator;
 
   private final EventProducer eventProducer;
+
+  private final DelayPenaltyRepository delayPenaltyRepository;
 
   public Fee getById(String id) {
     return updateFeeStatus(feeRepository.getById(id));
@@ -70,32 +76,6 @@ public class FeeService {
       return feeRepository.getFeesByStudentIdAndStatus(studentId, status, pageable);
     }
     return feeRepository.getByStudentId(studentId, pageable);
-  }
-
-  public class ConfigurationService {
-    private int gracePeriod;
-    private double lateFeeRate;
-
-    public ConfigurationService() {
-      this.gracePeriod = 10;
-      this.lateFeeRate = 0.05;
-    }
-
-    public int getGracePeriod() {
-      return gracePeriod;
-    }
-
-    public void setGracePeriod(int gracePeriod) {
-      this.gracePeriod = gracePeriod;
-    }
-
-    public double getLateFeeRate() {
-      return lateFeeRate;
-    }
-
-    public void setLateFeeRate(double lateFeeRate) {
-      this.lateFeeRate = lateFeeRate;
-    }
   }
 
   private Fee updateFeeStatus(Fee initialFee) {
@@ -144,4 +124,44 @@ public class FeeService {
     );
   }
 
+  @Scheduled(cron = "0 0 8 * * *")
+  public void automateInterest() {
+    List<Fee> lateFees = feeRepository.getFeesByStatus(LATE);
+    applyInterestPercent(lateFees);
+  }
+
+  public void applyInterestPercent(List<Fee> lateFees) {
+    DelayPenalty condition = delayPenaltyRepository.findAll().get(0);
+    int interestPercent = (int) condition.getInterestPercent();
+    int graceDelay = condition.getGraceDelay();
+    int applicabilityAfterGrace = condition.getApplicabilityDelayAfterGrace();
+
+    lateFees.forEach(
+            fee -> {
+              Instant due = fee.getDueDatetime();
+
+              Instant dueGrace = due.plus(graceDelay, ChronoUnit.DAYS);
+              Instant afterGrace = due.plus(applicabilityAfterGrace, ChronoUnit.DAYS);
+
+              Instant nextApplyInterest = fee.getLastApplyInterest() != null ? fee.getLastApplyInterest().plus(24, ChronoUnit.HOURS) : null;
+              Instant tentativeApplyInterest = Instant.now();
+
+
+              if (dueGrace.isAfter(tentativeApplyInterest) &&
+                      afterGrace.isBefore(tentativeApplyInterest) &&
+                      (nextApplyInterest == null || nextApplyInterest.isAfter(tentativeApplyInterest))
+              ) {
+                int timeDelta = fee.getLastApplyInterest() != null ? fee.getLastApplyInterest().get(ChronoField.DAY_OF_MONTH) - tentativeApplyInterest.get(ChronoField.DAY_OF_MONTH) : 1;
+                int newAmount = fee.getRemainingAmount() + ((fee.getRemainingAmount() * interestPercent / 100) * timeDelta);
+                fee.setRemainingAmount(newAmount);
+                fee.setLastApplyInterest(tentativeApplyInterest);
+              }
+              if(afterGrace.isAfter(tentativeApplyInterest)) log.info("Ito fy ito zany efa ...");
+            }
+    );
+
+    feeRepository.saveAll(lateFees);
+  }
 }
+
+
